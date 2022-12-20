@@ -1,6 +1,13 @@
 fetch("http://localhost:3000/api/products")
 .then((res) => res.json())
-.then((data) => console.log(data))
+.then((data) => addProducts(data))
 
-const anchor = document.createElement("a")
-anchor.href = "http://localhost:3000/images/kanap0"
+function addProducts(products){
+    const imageUrl = products[0].imageUrl
+
+    const anchor = document.createElement("a")
+    anchor.innerHTML = "je suis un lien"
+    anchor.href = imageUrl
+    const listNode = document.getElementById("items")
+    listNode.appendChild(anchor)
+}
