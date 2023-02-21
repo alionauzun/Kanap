@@ -1,4 +1,4 @@
-//-----------------formulaire----------------
+//-----------------Confirmation de la commande-----------------//
 const orderId = getOrderId()
 displayOrderId(orderId)
 remouveLocalStorage()

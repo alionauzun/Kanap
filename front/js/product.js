@@ -1,4 +1,6 @@
-// je crée une fonction pour envoyer une requête HTTP GET à l'API pour récupérer les données d'un produit
+//-------dansla page produit je récupère les données du produit sélectionné, pour les affiches dans le HTML, et permettre à l'utilisateur de sélectionner une couleur et une quantité pour ajouter le produit au panier----------------
+
+//fonction pour récupère les données du produit sélectionné
 function getProduct(id) {
   fetch("http://localhost:3000/api/products/" + id)
     .then((res) => {
@@ -14,20 +16,18 @@ function getProduct(id) {
     });
 }
 
-//je récupère l'id de l'url avec la méthode URLSearchParams et la méthode get 
-let url = new URL(window.location.href);//je récupère l'url
-let search_params = new URLSearchParams(url.search);//je récupère les paramètres de l'url
+//je récupère l'id de l'url  
+let url = new URL(window.location.href);
+let search_params = new URLSearchParams(url.search);
 const id = search_params.get("id");
 if (search_params.has("id")) {
   getProduct(id);
 }
-// je crée une fonction updateDescription qui prend en paramètre product qui est un objet qui contient les données de l'API 
-function updateDescription(product) {
-  let imageNode = document.getElementsByClassName("item__img")[0]; 
 
-  //j'affiche les donnes de l'API dans le HTML 
+// fonction pour afficher les données du produit
+function updateDescription(product) {
+  let imageNode = document.getElementsByClassName("item__img")[0];
   let image = makeImage(product.imageUrl, product.altTxt);
-  //on ajoute l'image dans l'élément de 'item__img'
   imageNode.appendChild(image);
   makeTitle(product.name);
   makePrice(product.price);
@@ -68,15 +68,14 @@ function makeColors(colors) {
   });
 }
 
-//Je récupère l'élément (boutton) sur lequel je veut détecter le clic
+//j'ajoute un écouteur d'événement click au bouton pour declencher la fonction addToCart et ajouter le produit au panier 
 const button = document.getElementById("addToCart");
 
-// On écoute l'événement click, et on appelle la fonction addToCart au clic sur le bouton 
 button.addEventListener("click", () => {
-  const color = document.getElementById("colors").value;//je récupère la valeur de la couleur
+  const color = document.getElementById("colors").value;
 
-  //je récupère la valeur de la quantité
-  const quantity = parseInt (document.getElementById("quantity").value);//
+  const quantity = parseInt (document.getElementById("quantity").value);
+  
   if (color == "") {
     alert("Veuillez choisir une couleur");
     return;
@@ -94,9 +93,8 @@ button.addEventListener("click", () => {
   };
   addToCart(produit);
 });
-//--------------------Le Local Storage--------------------
 
-//Declaration de la fonction addToCart et de la variable "panier" dans laquelle on met les key et les values qui sont dans le local storage
+//fonction pour ajouter le produit au panier
 function addToCart(produit) {
   let panier = localStorage.getItem("panier");
   if (panier == null) {
@@ -105,15 +103,14 @@ function addToCart(produit) {
     panier = JSON.parse(panier);
   }
   
-  //La méthode findIndex() renvoie l'indice du un élément du tableau qui satisfait une condition donnée par la fonction 
+  //je crée une variable pour trouver l'index du produit dans le panier
   let produitIndex = panier.findIndex((element) => {
     return element.id == produit.id && element.color == produit.color;
-  });//si le produit n'existe pas dans le panier, 
+  }); 
   if (produitIndex == -1) {
-    panier.push(produit); // on ajoute le produit dans le panier
+    panier.push(produit);
   } else {
     panier[produitIndex].quantity += produit.quantity;
   }
   localStorage.setItem("panier", JSON.stringify(panier));
-  console.log(produitIndex);
 }
