@@ -1,12 +1,15 @@
-//------------dans ce fichier j'integre le code suivant pour afficher les produits sur la page d'accueil de façon dynamique
+//---------afficher les produits sur la page d'accueil de façon dynamique------------//
 
 //je fais une requête fetch pour récupérer les données de l'API 
 fetch("http://localhost:3000/api/products")
+//je transforme les données en objet javascript
 .then((res) => res.json())
 .then((data) => addProducts(data))
 
 //fonction pour ajouter les produits sur la page d'accueil
 function addProducts(donnes){
+        //forEach pour parcourir le tableau des produits "donnes"
+        //et extraire les propriétés de chaque produit
         donnes.forEach((kanap) => {
         const {_id, imageUrl, altTxt, name, description} = kanap;
         
@@ -33,6 +36,7 @@ function appendElementsToArticle(article, array) {
 //fonction pour créer l'ancre
 function  makeAnchor (id){
     const anchor = document.createElement("a")
+    //lien avec l'id de chaque produit qui permet d'aller sur la page du produit sélectionné
     anchor.href = "./product.html?id=" + id 
     return anchor
 }

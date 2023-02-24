@@ -9,13 +9,13 @@ produit = JSON.parse(produit);
 
 //-----------Création de la structure HTML----------------
 
-// Je crée une boucle for de génération de la structure HTML pour chaque élément du panier
+// Je crée une boucle for pour parcourir les elements du panier stocké dans l'objet produit
 for (let i = 0; i < produit.length; i++) {
     let panierElement = produit[i];
     getProduct(panierElement.id, panierElement.color, panierElement.quantity);
 }
 
-// Je crée une fonction qui permet de récupérer les données de l'API
+// Cette fonction crée une representation visuelle du produit dans le panier
 function createArticle(panierElement, color, quantity) {
     const sectionCartItems = document.getElementById("cart__items");
 
@@ -23,7 +23,7 @@ function createArticle(panierElement, color, quantity) {
     const article = document.createElement("article");
     article.classList.add("cart__item");
     article.setAttribute("data-id", panierElement._id);
-    article.setAttribute("data-color", panierElement.colors);
+    article.setAttribute("data-color", color);
 
 //Creation d'une balise dédiée à l'image de l'élément du panier
     const divImg = document.createElement("div");
@@ -61,7 +61,7 @@ function createArticle(panierElement, color, quantity) {
 
     const quanityElement = document.createElement("p");
     quanityElement.innerText = "Qté :";
-// je 
+// je ajoute des attributs à l'input pour pouvoir le modifier et le supprimer 
     const inputQuantity = document.createElement("input");
     inputQuantity.setAttribute("type", "number");
     inputQuantity.setAttribute("name", "itemQuantity");
@@ -73,12 +73,15 @@ function createArticle(panierElement, color, quantity) {
     inputQuantity.classList.add("itemQuantity");
     inputQuantity.addEventListener("change", (event) => {
     const input = event.target;
+
+    // Je met à jour le prix et la quantité de l'élément du panier
     updatePriceAndQuantity(
         input.dataset.id,
         input.dataset.color,
         input.value,
         panierElement.price
         );
+    // Je met à jour le local storage
         updateItemsToLocalStorage(
         input.dataset.id,
         input.dataset.color,
@@ -86,7 +89,7 @@ function createArticle(panierElement, color, quantity) {
     );
     });
 
- //Je recupere le bouton supprimer de l'élément du panier
+ //Je crée un bouton supprimer pour supprimer un élément du panier
     const settingsDelete = document.createElement("div");
     settingsDelete.classList.add("cart__item__content__settings__delete");
 
@@ -95,7 +98,7 @@ function createArticle(panierElement, color, quantity) {
     deleteElement.innerText = "Supprimer";
 
     deleteElement.addEventListener("click", () => {
-    deleteArticle(panierElement, quantity);
+    deleteArticle(panierElement, color, quantity);
     deleteItemToLocalStorage(panierElement._id, color);
     });
 
@@ -124,6 +127,7 @@ function createArticle(panierElement, color, quantity) {
 //Je place le bouton supprimer de l'élément du panier dans le DOM
     divSettings.appendChild(settingsDelete);
     settingsDelete.appendChild(deleteElement);
+
     updateCartTotal(quantity, panierElement.price);
 }
 
@@ -142,9 +146,9 @@ function getProduct(id, color, quantity) {
 }
 
 //Je crér une fonction pour supprimer un élément du panier
-function deleteArticle(product, quantity) {
+function deleteArticle(product, color, quantity) {
     const article = document.querySelector(
-        "[data-id='" + product._id + "'][data-color='" + product.colors + "']"
+        "[data-id='" + product._id + "'][data-color='" + color + "']"
     );
     article.remove();
     updateCartTotal(-quantity, product.price);
@@ -212,30 +216,46 @@ function submitForm() {
     }
     if (isFormInvalid()) return; 
     if (isEmailInvalid()) return; 
+    const body = makeRequestBody();
 
-  //Je créer un objet avec les données du formulaire et les données du panier pour envoyer les données au serveur 
-const body = makeRequestBody();
+    //Je crée une requête POST pour envoyer les données au serveur
     fetch("http://localhost:3000/api/products/order", {
         method: "POST",
         body: JSON.stringify(body),
         headers: {
             "Content-Type": "application/json"
         }
-    }) //Je récupère l'identifiant de la commande et je le stocke dans le localStorage pour l'afficher sur la page de confirmation de commande 
+      }) //Je récupère l'identifiant de la commande et je le stocke dans le localStorage pour l'afficher sur la page de confirmation de commande 
     .then((res) => res.json())
     .then((data) => {
     let orderId = data.orderId
     window.location.href = "/front/html/confirmation.html" + "?orderId=" + orderId;
     })
 }
-
 //fonction pour valider le formulaire
 function isFormInvalid() {
     const form = document.querySelector(".cart__order__form");
     const input = form.querySelectorAll("input");
     const regex = /^[a-zA-Z]+$/;
+    const regexAddress = /^[0-9]+[a-zA-Z\s,'-]*$/;
     if (!regex.test(input[0].value)) {
-        alert("Veuillez entrer un nom valide");
+        let message = document.getElementById("firstNameErrorMsg");
+        message.innerHTML = "Veuillez entrer un prenom valide";
+        return true;
+    }
+    if (!regex.test(input[1].value)) {
+        let message = document.getElementById("lastNameErrorMsg");
+        message.innerHTML = "Veuillez entrer un nom valide";
+        return true;
+    }
+    if (!regexAddress.test(input[2].value)) {
+        let message = document.getElementById("addressErrorMsg");
+        message.innerHTML = "Veuillez entrer une adresse valide";
+        return true;
+    }
+    if (!regex.test(input[3].value)) {
+        let message = document.getElementById("cityErrorMsg");
+        message.innerHTML = "Veuillez entrer une ville valide";
         return true;
     }
     input.forEach((input) => {
@@ -252,13 +272,14 @@ function isEmailInvalid() {
     const email = document.getElementById("email").value;
     const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/; 
     if (!regex.test(email)) {
-        alert("Veuillez entrer une adresse email valide");
+        let message = document.getElementById("emailErrorMsg");
+        message.innerHTML = "Veuillez entrer une adresse email valide";
         return true;
     }
     return false;
 }
 
-//fonction pour envoyer les données du formulaire
+//fonction pour créer le corps de la requête
 function makeRequestBody() {
     const form = document.querySelector(".cart__order__form");
     const firstName = form.elements.firstName.value;
@@ -266,7 +287,8 @@ function makeRequestBody() {
     const address = form.elements.address.value;
     const city = form.elements.city.value;
     const email = form.elements.email.value;
-
+//je recupère les données du formulaire qui ont été entrées par l'utilisateur
+//je les stocke dans un objet
     const body = {
         contact: {
         firstName: firstName,
@@ -280,7 +302,8 @@ function makeRequestBody() {
     return body;
 }
 
-//fonction pour récupérer les id des produits du local storage
+//fonction pour récupérer les ids des produits du local storage
+//pour les envoyer au serveur
 function getIdsFromLocalStorage() {
     const numberOrder = produit.length;
     const ids = [];
